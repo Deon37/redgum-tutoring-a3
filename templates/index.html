@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Redgum Tutoring{% endblock %}
+
+{% block content %}
+<h1>Redgum Tutoring</h1>
+<p>Scheduling system for front desk and tutors.</p>
+
+<div class="card-grid">
+    <a href="{{ url_for('students') }}" class="card">
+        <h2>Students</h2>
+        <p>View, add, and manage student records.</p>
+    </a>
+    <a href="{{ url_for('tutors') }}" class="card">
+        <h2>Tutors</h2>
+        <p>Manage tutors, subjects, and availability.</p>
+    </a>
+    <a href="{{ url_for('sessions') }}" class="card">
+        <h2>Sessions</h2>
+        <p>Book, move, and cancel sessions.</p>
+    </a>
+    <a href="{{ url_for('schedule') }}" class="card">
+        <h2>Schedule</h2>
+        <p>View the day schedule and tutor sessions.</p>
+    </a>
+</div>
+{% endblock %}
