@@ -17,53 +17,41 @@ You need these installed before you start:
 
 ## Setup
 
-**1. Clone the repo**
+1. Clone the repo
 ```
 git clone https://github.com/Deon37/redgum-tutoring-a3.git
 cd redgum-tutoring-a3
 ```
 
-**2. Install dependencies**
+2. Install dependencies
 ```
 pip install flask==3.1.0
 ```
 
-**3. Create the database**
+3. Create the database
 ```
 python init_db.py
 ```
 
-**4. Run the app**
+4. Run the app
 ```
 python app.py
 ```
 
-**5. Open in browser**
-```
-http://localhost:5000
-```
+5. Open http://localhost:5000 in your browser
 
 ---
 
 ## Project Structure
 
 ```
-app.py          All Flask routes
-database.py     Database connection and query functions
-init_db.py      Run once to create the database
-schema.sql      Table definitions
-requirements.txt
-
-static/
-  style.css     All styling
-
-templates/
-  base.html     Shared layout and nav
-  index.html    Home page
-  students.html
-  tutors.html
-  sessions.html
-  schedule.html
+app.py           Flask routes
+database.py      Database connection and query functions
+init_db.py       Run once to create the database
+schema.sql       Table definitions
+requirements.txt Dependencies
+static/style.css Styling
+templates/       HTML pages
 ```
 
 ---
