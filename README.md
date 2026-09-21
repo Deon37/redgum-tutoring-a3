@@ -10,8 +10,9 @@ Built with Python 3.12, Flask 3.1.0, SQLite, and vanilla HTML/CSS/JS.
 
 You need these installed before you start:
 
-- **Python 3.12** — https://www.python.org/downloads/ (do not install 3.13, pick 3.12.x from the list)
-- **Git** — https://git-scm.com/downloads (or use GitHub Desktop if you prefer: https://desktop.github.com)
+- **Python 3.12** (do not install 3.13): https://www.python.org/downloads/
+- **Git**: https://git-scm.com/downloads
+- Prefer GitHub Desktop? https://desktop.github.com
 
 ---
 
@@ -44,15 +45,15 @@ python app.py
 
 ## Project Structure
 
-```
-app.py           Flask routes
-database.py      Database connection and query functions
-init_db.py       Run once to create the database
-schema.sql       Table definitions
-requirements.txt Dependencies
-static/style.css Styling
-templates/       HTML pages
-```
+| File / Folder | Purpose |
+|---|---|
+| `app.py` | All Flask routes |
+| `database.py` | Database connection and query functions |
+| `init_db.py` | Run once to create the database |
+| `schema.sql` | Table definitions |
+| `requirements.txt` | Python dependencies |
+| `static/style.css` | All styling |
+| `templates/` | HTML pages |
 
 ---
 
