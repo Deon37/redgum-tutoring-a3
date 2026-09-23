@@ -19,3 +19,27 @@ def close_db(e=None):
 
 def init_app(app):
     app.teardown_appcontext(close_db)
+
+
+def get_students():
+    db = get_db()
+    return db.execute(
+        'SELECT * FROM students WHERE active = 1 ORDER BY name'
+    ).fetchall()
+
+
+def add_student(name, year_level, contact_name, contact_phone):
+    db = get_db()
+    db.execute(
+        'INSERT INTO students (name, year_level, contact_name, contact_phone) VALUES (?, ?, ?, ?)',
+        (name, year_level, contact_name, contact_phone)
+    )
+    db.commit()
+
+
+def search_students(query):
+    db = get_db()
+    return db.execute(
+        'SELECT * FROM students WHERE active = 1 AND name LIKE ? ORDER BY name',
+        (f'%{query}%',)
+    ).fetchall()

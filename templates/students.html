@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Students{% endblock %}
+
+{% block content %}
+{# TODO Mitzi: search backend is done, just wire up the form here.
+   Route passes `search` (the current query). Form should GET this page with a `search` param.
+   Use existing CSS classes from style.css. #}
+{# START: Mitzi search form #}
+
+{# END: Mitzi search form #}
+<div class="section-header">
+    <div>
+        <h1>Students</h1>
+        <p>All active students enrolled at Redgum Tutoring.</p>
+    </div>
+    <a href="#add-student" class="btn btn-primary">Add Student</a>
+</div>
+
+{% if students %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Year</th>
+            <th>Contact Name</th>
+            <th>Contact Phone</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+        <tr>
+            <td>{{ student['name'] }}</td>
+            <td>{{ student['year_level'] }}</td>
+            <td>{{ student['contact_name'] }}</td>
+            <td>{{ student['contact_phone'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No students yet. Add one below.</p>
+{% endif %}
+
+<h2 id="add-student" class="mt-24">Add Student</h2>
+<form class="form" method="POST" action="">
+    <div class="form-group">
+        <label for="name">Student Name</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <div class="form-group">
+        <label for="year_level">Year Level</label>
+        <input type="number" id="year_level" name="year_level" min="1" max="12" required>
+    </div>
+    <div class="form-group">
+        <label for="contact_name">Parent / Guardian Name</label>
+        <input type="text" id="contact_name" name="contact_name" required>
+    </div>
+    <div class="form-group">
+        <label for="contact_phone">Contact Phone</label>
+        <input type="text" id="contact_phone" name="contact_phone" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Student</button>
+</form>
+{% endblock %}
