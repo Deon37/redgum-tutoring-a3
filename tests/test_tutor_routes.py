@@ -4,12 +4,43 @@ import sqlite3
 import tempfile
 import unittest
 from contextlib import closing
+from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import urlsplit
 
 from app import app
 import database
+
+
+class TutorPageParser(HTMLParser):
+    """Read form controls and links without depending on HTML formatting."""
+
+    def __init__(self, html):
+        super().__init__()
+        self.links = []
+        self.forms = []
+        self.current_form = None
+        self.feed(html)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == 'a':
+            self.links.append(attrs.get('href'))
+        elif tag == 'form':
+            self.current_form = {'attrs': attrs, 'inputs': {}, 'submit': False}
+            self.forms.append(self.current_form)
+        elif self.current_form is not None:
+            if tag == 'input' and attrs.get('name'):
+                self.current_form['inputs'][attrs['name']] = attrs
+            if (tag == 'button' and attrs.get('type', 'submit') == 'submit') or (
+                tag == 'input' and attrs.get('type') == 'submit'
+            ):
+                self.current_form['submit'] = True
+
+    def handle_endtag(self, tag):
+        if tag == 'form':
+            self.current_form = None
 
 
 class TutorRouteTests(unittest.TestCase):
@@ -53,6 +84,46 @@ class TutorRouteTests(unittest.TestCase):
         for tutor in self.tutors():
             self.assertIn(tutor['name'], page)
             self.assertIn(tutor['subjects'], page)
+
+    def test_tutor_list_links_to_each_edit_page(self):
+        tutor_ids = [self.seed_tutor(), self.seed_tutor('Helen Vasquez', 'Maths')]
+
+        response = self.client.get('/tutors')
+
+        self.assertEqual(response.status_code, 200)
+        page = TutorPageParser(response.get_data(as_text=True))
+        for tutor_id in tutor_ids:
+            self.assertIn(f'/tutors/{tutor_id}', page.links)
+
+    def assert_tutor_form(self, response, action, expected_values):
+        self.assertEqual(response.status_code, 200)
+        page = TutorPageParser(response.get_data(as_text=True))
+        forms = [form for form in page.forms if form['attrs'].get('action') == action]
+        self.assertEqual(len(forms), 1, 'Expected one form targeting the tutor route.')
+        form = forms[0]
+        self.assertEqual(form['attrs'].get('method', 'get').lower(), 'post')
+        self.assertTrue(form['submit'], 'The form needs a submit control.')
+        for name, value in expected_values.items():
+            self.assertIn(name, form['inputs'])
+            field = form['inputs'][name]
+            self.assertEqual(field.get('value', ''), value)
+            self.assertIn('required', field)
+            self.assertNotIn('disabled', field)
+            self.assertNotIn('readonly', field)
+
+    def test_add_form_has_blank_required_fields_and_posts_to_tutor_list(self):
+        response = self.client.get('/tutors')
+
+        self.assert_tutor_form(response, '/tutors', {'name': '', 'subjects': ''})
+
+    def test_edit_form_prefills_details_and_posts_to_selected_tutor(self):
+        tutor_id = self.seed_tutor('Helen Vasquez', 'Senior Mathematics')
+
+        response = self.client.get(f'/tutors/{tutor_id}')
+
+        self.assert_tutor_form(response, f'/tutors/{tutor_id}', {
+            'name': 'Helen Vasquez', 'subjects': 'Senior Mathematics',
+        })
 
     def test_post_saves_tutor_and_redirects_to_list(self):
         response = self.client.post('/tutors', data={
