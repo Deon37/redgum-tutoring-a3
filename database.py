@@ -52,6 +52,13 @@ def get_tutors():
     ).fetchall()
 
 
+def get_tutor(tutor_id):
+    db = get_db()
+    return db.execute(
+        'SELECT * FROM tutors WHERE id = ?', (tutor_id,)
+    ).fetchone()
+
+
 def _validate_tutor_details(name, subjects):
     for field, value in (('name', name), ('subjects', subjects)):
         if not isinstance(value, str) or not value.strip():

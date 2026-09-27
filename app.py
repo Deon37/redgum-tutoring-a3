@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 import database
 
 app = Flask(__name__)
@@ -50,6 +50,27 @@ def tutors():
             return redirect(url_for('tutors'))
 
     return render_template('tutors.html', tutors=database.get_tutors())
+
+
+@app.route('/tutors/<int:tutor_id>', methods=['GET', 'POST'])
+def tutor_detail(tutor_id):
+    tutor = database.get_tutor(tutor_id)
+    if tutor is None:
+        abort(404)
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        subjects = request.form.get('subjects', '').strip()
+
+        try:
+            database.update_tutor(tutor_id, name, subjects)
+        except ValueError as error:
+            flash(str(error), 'error')
+        else:
+            flash(f'{name} updated.', 'success')
+            return redirect(url_for('tutors'))
+
+    return render_template('tutor_detail.html', tutor=tutor)
 
 
 @app.route('/sessions')

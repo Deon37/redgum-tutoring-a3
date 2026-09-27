@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Tutor{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h1>Edit Tutor</h1>
+        <p>Update the tutor's name and subjects.</p>
+    </div>
+    <a href="{{ url_for('tutors') }}" class="btn">Back to Tutors</a>
+</div>
+
+<form class="form" method="POST" action="{{ url_for('tutor_detail', tutor_id=tutor['id']) }}">
+    <div class="form-group">
+        <label for="name">Tutor Name</label>
+        <input type="text" id="name" name="name" value="{{ request.form.get('name', '') if request.method == 'POST' else tutor['name'] }}" required>
+    </div>
+    <div class="form-group">
+        <label for="subjects">Subjects</label>
+        <input type="text" id="subjects" name="subjects" value="{{ request.form.get('subjects', '') if request.method == 'POST' else tutor['subjects'] }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>
+{% endblock %}

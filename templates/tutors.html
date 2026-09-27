@@ -22,7 +22,7 @@
     <tbody>
         {% for tutor in tutors %}
         <tr>
-            <td>{{ tutor['name'] }}</td>
+            <td><a href="{{ url_for('tutor_detail', tutor_id=tutor['id']) }}">{{ tutor['name'] }}</a></td>
             <td>{{ tutor['subjects'] }}</td>
         </tr>
         {% endfor %}
