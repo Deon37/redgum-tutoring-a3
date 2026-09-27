@@ -1,4 +1,4 @@
-"""HTTP contract for listing and creating tutors."""
+"""HTTP contract for listing, creating, viewing and updating tutors."""
 
 import sqlite3
 import tempfile
@@ -30,11 +30,12 @@ class TutorRouteTests(unittest.TestCase):
 
     def seed_tutor(self, name='Tomás Ferreira', subjects='Physics, Chemistry', active=1):
         with closing(sqlite3.connect(self.db_path)) as connection:
-            connection.execute(
+            cursor = connection.execute(
                 'INSERT INTO tutors (name, subjects, active) VALUES (?, ?, ?)',
                 (name, subjects, active),
             )
             connection.commit()
+            return cursor.lastrowid
 
     def tutors(self):
         with closing(sqlite3.connect(self.db_path)) as connection:
@@ -77,6 +78,63 @@ class TutorRouteTests(unittest.TestCase):
                 self.assertIn(response.status_code, (200, 400))
                 self.assertRegex(response.get_data(as_text=True), r'(?i)required')
                 self.assertEqual(self.tutors(), [])
+
+
+    def test_get_tutor_displays_the_requested_tutor(self):
+        tutor_id = self.seed_tutor()
+        self.seed_tutor('Helen Vasquez', 'Senior Mathematics')
+
+        response = self.client.get(f'/tutors/{tutor_id}')
+
+        self.assertEqual(response.status_code, 200)
+        page = response.get_data(as_text=True)
+        self.assertIn('Tomás Ferreira', page)
+        self.assertIn('Physics, Chemistry', page)
+        self.assertNotIn('Helen Vasquez', page)
+
+    def test_post_tutor_updates_only_the_requested_tutor_and_redirects(self):
+        tutor_id = self.seed_tutor()
+        self.seed_tutor('Helen Vasquez', 'Senior Mathematics')
+        before = self.tutors()
+
+        response = self.client.post(f'/tutors/{tutor_id}', data={
+            'name': 'Tom Ferreira', 'subjects': 'Maths Methods',
+        })
+
+        self.assertIn(response.status_code, (302, 303))
+        self.assertEqual(urlsplit(response.headers['Location']).path, '/tutors')
+        expected = [dict(tutor) for tutor in before]
+        expected[0].update(name='Tom Ferreira', subjects='Maths Methods')
+        self.assertEqual(self.tutors(), expected)
+
+    def test_post_tutor_rejects_missing_required_fields_without_changes(self):
+        tutor_id = self.seed_tutor()
+        before = self.tutors()
+        for field in ('name', 'subjects'):
+            with self.subTest(field=field):
+                data = {'name': 'Changed Name', 'subjects': 'Changed Subject'}
+                del data[field]
+
+                response = self.client.post(
+                    f'/tutors/{tutor_id}', data=data, follow_redirects=True,
+                )
+
+                self.assertIn(response.status_code, (200, 400))
+                self.assertRegex(response.get_data(as_text=True), r'(?i)required')
+                self.assertEqual(self.tutors(), before)
+
+    def test_unknown_tutor_returns_404_without_changes(self):
+        tutor_id = self.seed_tutor()
+        before = self.tutors()
+        for method in ('GET', 'POST'):
+            with self.subTest(method=method):
+                response = self.client.open(
+                    f'/tutors/{tutor_id + 1}', method=method,
+                    data={'name': 'Missing Tutor', 'subjects': 'Maths'},
+                )
+
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(self.tutors(), before)
 
 
 if __name__ == '__main__':
