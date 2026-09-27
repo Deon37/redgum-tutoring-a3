@@ -8,12 +8,24 @@
    Use existing CSS classes from style.css. #}
 {# START: Mitzi search form #}
 
+<!-- the search form that send input as a URL param and reloads this page -->>
 <form class="form" method="GET" action="">
+
+    <!-- start of wrapper div for styling -->>
     <div class="form-group">
+
+        <!-- label for the input box -->>
         <label for="search">Search</label>
+
+        <!-- input box for the search text -->>
         <input type="text" id="search" name="search" value="{{ search }}">
+
+    <!-- end of wrapper div for styling -->>
     </div>
+
+    <!-- button the submits the form -->>
     <button type="submit" class="btn btn-secondary">Search</button>
+
 </form>
 
 {# END: Mitzi search form #}
