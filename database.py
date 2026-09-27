@@ -43,3 +43,33 @@ def search_students(query):
         'SELECT * FROM students WHERE active = 1 AND name LIKE ? ORDER BY name',
         (f'%{query}%',)
     ).fetchall()
+
+
+def _validate_tutor_details(name, subjects):
+    for field, value in (('name', name), ('subjects', subjects)):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f'Tutor {field} is required.')
+
+
+def add_tutor(name, subjects):
+    """Save a new active tutor with a required name and subjects."""
+    _validate_tutor_details(name, subjects)
+    db = get_db()
+    with db:
+        db.execute(
+            'INSERT INTO tutors (name, subjects) VALUES (?, ?)',
+            (name, subjects)
+        )
+
+
+def update_tutor(tutor_id, name, subjects):
+    """Update tutor details without changing status or related records."""
+    _validate_tutor_details(name, subjects)
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            'UPDATE tutors SET name = ?, subjects = ? WHERE id = ?',
+            (name, subjects, tutor_id)
+        )
+        if cursor.rowcount == 0:
+            raise ValueError(f'Tutor {tutor_id} was not found.')
