@@ -7,10 +7,15 @@
    Route passes `search` (the current query). Form should GET this page with a `search` param.
    Use existing CSS classes from style.css. #}
 {# START: Mitzi search form #}
-<!-- 
-    <form>
-    </form>
--->
+
+<form class="form" method="GET" action="">
+    <div class="form-group">
+        <label for="search">Search</label>
+        <input type="text" id="search" name="search" value="{{ search }}">
+    </div>
+    <button type="submit" class="btn btn-secondary">Search</button>
+</form>
+
 {# END: Mitzi search form #}
 
 <div class="section-header">
