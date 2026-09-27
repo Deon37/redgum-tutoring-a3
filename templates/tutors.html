@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Tutors{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h1>Tutors</h1>
+        <p>All active tutors at Redgum Tutoring.</p>
+    </div>
+    <a href="#add-tutor" class="btn btn-primary">Add Tutor</a>
+</div>
+
+{% if tutors %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Subjects</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tutor in tutors %}
+        <tr>
+            <td>{{ tutor['name'] }}</td>
+            <td>{{ tutor['subjects'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No active tutors yet. Add one below.</p>
+{% endif %}
+
+<h2 id="add-tutor" class="mt-24">Add Tutor</h2>
+<form class="form" method="POST" action="{{ url_for('tutors') }}">
+    <div class="form-group">
+        <label for="name">Tutor Name</label>
+        <input type="text" id="name" name="name" value="{{ request.form.get('name', '') }}" required>
+    </div>
+    <div class="form-group">
+        <label for="subjects">Subjects</label>
+        <input type="text" id="subjects" name="subjects" value="{{ request.form.get('subjects', '') }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Tutor</button>
+</form>
+{% endblock %}

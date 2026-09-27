@@ -45,6 +45,13 @@ def search_students(query):
     ).fetchall()
 
 
+def get_tutors():
+    db = get_db()
+    return db.execute(
+        'SELECT * FROM tutors WHERE active = 1 ORDER BY name'
+    ).fetchall()
+
+
 def _validate_tutor_details(name, subjects):
     for field, value in (('name', name), ('subjects', subjects)):
         if not isinstance(value, str) or not value.strip():

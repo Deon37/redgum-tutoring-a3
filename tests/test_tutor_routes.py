@@ -1,4 +1,4 @@
-"""HTTP contract for listing and creating tutors (TDD red phase)."""
+"""HTTP contract for listing and creating tutors."""
 
 import sqlite3
 import tempfile

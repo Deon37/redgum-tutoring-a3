@@ -35,9 +35,21 @@ def students():
     return render_template('students.html', students=student_list, search=query)
 
 
-@app.route('/tutors')
+@app.route('/tutors', methods=['GET', 'POST'])
 def tutors():
-    return render_template('index.html')
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        subjects = request.form.get('subjects', '').strip()
+
+        try:
+            database.add_tutor(name, subjects)
+        except ValueError as error:
+            flash(str(error), 'error')
+        else:
+            flash(f'{name} added.', 'success')
+            return redirect(url_for('tutors'))
+
+    return render_template('tutors.html', tutors=database.get_tutors())
 
 
 @app.route('/sessions')
