@@ -43,6 +43,40 @@ python app.py
 
 ---
 
+## Tests
+
+After installing the dependencies, run the tutor database and route tests:
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+The tests use Python's built-in `unittest` and a temporary SQLite database built from `schema.sql`. They do not read or change your application's `redgum.db`.
+
+`add_tutor()` and `update_tutor()` implement the contract covered by these tests:
+
+- `add_tutor(name, subjects)` saves a new active tutor and commits the change.
+- `update_tutor(tutor_id, name, subjects)` saves both supplied fields and commits the change, preserving the ID, active status, other tutors, sessions and availability.
+- Subjects use the existing schema's text field, such as `Physics, Chemistry`.
+
+The case study requires creating tutors and changing their names and subjects. Deactivation, booking options and availability window validation are separate work, as preserving availability here does not test the booking availability rule.
+
+The route tests in `tests/test_tutor_routes.py` cover the implemented GET and POST `/tutors` routes. They use Flask's test client and require no additional dependencies.
+
+The contract is:
+
+- GET displays active tutor names and subjects, following the student-page pattern.
+- POST saves a new active tutor and redirects to `/tutors` (302 or 303).
+- A missing name or subjects field prevents creation and displays feedback containing `required`. The final response may be 200 or 400.
+
+The tutor detail route tests cover the implemented `GET /tutors/<id>` and `POST /tutors/<id>` routes. Select a tutor's name in the list to edit their details:
+
+- GET displays the requested tutor's name and subjects.
+- POST updates only that tutor's name and subjects.
+- Missing required fields display `required` feedback (200 or 400) without changes.
+
+Deactivation and booking validation remain separate route work.
+
 ## Project Structure
 
 | File / Folder | Purpose |
