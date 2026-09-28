@@ -5,7 +5,8 @@ def init_db():
     conn = sqlite3.connect('redgum.db')
     with open('schema.sql', 'r') as f:
         conn.executescript(f.read())
-    conn.commit()
+    with open('seed.sql', 'r') as f:
+        conn.executescript(f.read())
     conn.close()
     print('Database initialised.')
 
