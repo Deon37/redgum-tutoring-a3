@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime, timedelta
 from flask import g
 
 DATABASE = 'redgum.db'
@@ -108,3 +109,56 @@ def delete_availability(availability_id):
     db = get_db()
     db.execute('DELETE FROM availability WHERE id = ?', (availability_id,))
     db.commit()
+
+
+def _to_day_name(date_str):
+    return datetime.strptime(date_str, '%Y-%m-%d').strftime('%A')
+
+
+def _session_end(start_time, length_mins):
+    dt = datetime.strptime(start_time, '%H:%M') + timedelta(minutes=int(length_mins))
+    return dt.strftime('%H:%M')
+
+
+def check_availability(tutor_id, date, start_time, length_mins):
+    day = _to_day_name(date)
+    end_time = _session_end(start_time, length_mins)
+    db = get_db()
+    windows = db.execute(
+        'SELECT * FROM availability WHERE tutor_id = ? AND day_of_week = ?',
+        (tutor_id, day)
+    ).fetchall()
+    if not windows:
+        tutor = get_tutor(tutor_id)
+        return False, f'{tutor["name"]} is not available on {day}s.'
+    for w in windows:
+        if w['start_time'] <= start_time and w['end_time'] >= end_time:
+            return True, None
+    tutor = get_tutor(tutor_id)
+    for w in windows:
+        if end_time > w['end_time'] and start_time >= w['start_time']:
+            return False, f'{tutor["name"]} is not available past {w["end_time"]} on {day}s.'
+        if start_time < w['start_time']:
+            return False, f'{tutor["name"]} is not available before {w["start_time"]} on {day}s.'
+    return False, f'{tutor["name"]} is not available at that time on {day}s.'
+
+
+def book_session(student_id, tutor_id, date, start_time, length_mins):
+    db = get_db()
+    db.execute(
+        'INSERT INTO sessions (student_id, tutor_id, date, start_time, length_mins) VALUES (?, ?, ?, ?, ?)',
+        (student_id, tutor_id, date, start_time, length_mins)
+    )
+    db.commit()
+
+
+def get_sessions():
+    db = get_db()
+    return db.execute(
+        '''SELECT s.id, st.name AS student_name, t.name AS tutor_name,
+                  s.date, s.start_time, s.length_mins, s.status
+           FROM sessions s
+           JOIN students st ON st.id = s.student_id
+           JOIN tutors t ON t.id = s.tutor_id
+           ORDER BY s.date DESC, s.start_time DESC'''
+    ).fetchall()

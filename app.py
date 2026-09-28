@@ -105,9 +105,29 @@ def delete_availability(availability_id):
     return redirect(url_for('availability', tutor_id=tutor_id))
 
 
-@app.route('/sessions')
+@app.route('/sessions', methods=['GET', 'POST'])
 def sessions():
-    return render_template('index.html')
+    if request.method == 'POST':
+        student_id = request.form.get('student_id', '').strip()
+        tutor_id = request.form.get('tutor_id', '').strip()
+        date = request.form.get('date', '').strip()
+        start_time = request.form.get('start_time', '').strip()
+        length_mins = request.form.get('length_mins', '').strip()
+        if not student_id or not tutor_id or not date or not start_time or not length_mins:
+            flash('All fields are required.', 'error')
+        else:
+            ok, reason = database.check_availability(tutor_id, date, start_time, int(length_mins))
+            if not ok:
+                flash(reason, 'error')
+            else:
+                database.book_session(student_id, tutor_id, date, start_time, int(length_mins))
+                flash('Session booked.', 'success')
+                return redirect(url_for('sessions'))
+    return render_template('sessions.html',
+        students=database.get_students(),
+        tutors=database.get_tutors(),
+        sessions=database.get_sessions()
+    )
 
 
 @app.route('/schedule')
