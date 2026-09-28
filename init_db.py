@@ -1,7 +1,10 @@
 import sqlite3
+import os
 
 
 def init_db():
+    if os.path.exists('redgum.db'):
+        os.remove('redgum.db')
     conn = sqlite3.connect('redgum.db')
     with open('schema.sql', 'r') as f:
         conn.executescript(f.read())
