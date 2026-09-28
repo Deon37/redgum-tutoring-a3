@@ -121,7 +121,7 @@ Deactivation and booking validation remain separate route work.
 
 ## Branching
 
-Work on a feature branch, never commit directly to main or develop.
+Work on a feature branch for features.
 
 1. Check out develop and pull the latest
 2. Create a branch named after what you are building (e.g. feature/student-list, feature/tutor-page)
