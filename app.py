@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from config import load_settings
 import database
 
 app = Flask(__name__)
-app.secret_key = 'dev'
+app.config.update(load_settings())
 
 database.init_app(app)
 
@@ -136,4 +137,4 @@ def schedule():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=app.debug, load_dotenv=False)

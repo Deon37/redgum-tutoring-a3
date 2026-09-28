@@ -24,34 +24,58 @@ git clone https://github.com/Deon37/redgum-tutoring-a3.git
 cd redgum-tutoring-a3
 ```
 
-2. Install dependencies
-```
-pip install flask==3.1.0
-```
-
-3. Create the database
-```
-python init_db.py
+2. Create a virtual environment and install the pinned dependencies (Windows PowerShell)
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-4. Run the app
-```
-python app.py
+3. Configure the application
+```powershell
+Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-5. Open http://localhost:5000 in your browser
+Open `.env` and paste the generated value after `SECRET_KEY=`. Keep this key private and use a different key on each machine. Copy the example only on first setup so you do not overwrite existing settings.
+
+| Setting | Purpose | Default |
+|---|---|---|
+| `SECRET_KEY` | Signs Flask session cookies used for feedback messages | Required; startup stops with instructions if missing or blank |
+| `FLASK_DEBUG` | Enables Flask's debugger and automatic reload for local development | `false` |
+
+The app reads `.env` from the repository root using [python-dotenv](https://pypi.org/project/python-dotenv/). Existing environment variables take precedence over the file. Debug accepts `true`/`false`, `1`/`0`, `yes`/`no` or `on`/`off`; invalid values stop startup. Enable debugging only for local development. The Flask development server is for local demonstration, not public hosting.
+
+`.env` and local variants such as `.env.local` are ignored by Git. Only `.env` is loaded automatically; `.env.example` is the versioned template and contains no actual key.
+
+4. Create the database and load the demo records
+```powershell
+.\.venv\Scripts\python.exe init_db.py
+```
+
+Run this from the repository root. The setup script replaces any existing `redgum.db` with demo data, so back up any records you want to keep before running it again.
+
+5. Run the app
+```powershell
+.\.venv\Scripts\python.exe app.py
+```
+
+6. Open http://localhost:5000 in your browser
+
+On macOS/Linux, create the environment with `python3.12 -m venv .venv`, use `.venv/bin/python` in place of `.\.venv\Scripts\python.exe`, and copy the example with `cp .env.example .env`.
 
 ---
 
 ## Tests
 
-After installing the dependencies, run the tutor database and route tests:
+After installing the dependencies, run the automated tests:
 
-```sh
-python -m unittest discover -s tests -v
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-The tests use Python's built-in `unittest` and a temporary SQLite database built from `schema.sql`. They do not read or change your application's `redgum.db`.
+The tests use Python's built-in `unittest` and temporary SQLite databases built from `schema.sql`. They do not change your application's `redgum.db`. Test settings are supplied separately, so a private `.env` file is not required to run the suite.
+
+Configuration tests check missing keys, debug parsing and environment precedence.
 
 `add_tutor()` and `update_tutor()` implement the contract covered by these tests:
 
@@ -82,10 +106,14 @@ Deactivation and booking validation remain separate route work.
 | File / Folder | Purpose |
 |---|---|
 | `app.py` | All Flask routes |
+| `config.py` | Loads and validates the secret key and debug setting |
+| `.env.example` | Safe configuration template to copy on first setup |
 | `database.py` | Database connection and query functions |
-| `init_db.py` | Run once to create the database |
+| `init_db.py` | Creates the database and reloads demo data |
 | `schema.sql` | Table definitions |
+| `seed.sql` | Demo records loaded during database setup |
 | `requirements.txt` | Python dependencies |
+| `tests/` | Tutor regression and configuration tests |
 | `static/style.css` | All styling |
 | `templates/` | HTML pages |
 
@@ -104,5 +132,5 @@ Work on a feature branch, never commit directly to main or develop.
 
 ## Notes
 
-- The database file `redgum.db` is not committed. Run `python init_db.py` to create it.
-- If the schema changes, delete `redgum.db` and run `python init_db.py` again.
+- The database file `redgum.db` is not committed. Run the app and setup commands from the repository root.
+- If the schema changes, back up any records you need before running `init_db.py` again; it replaces the database with demo data.

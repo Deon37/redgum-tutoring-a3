@@ -1,5 +1,6 @@
 """HTTP contract for listing, creating, viewing and updating tutors."""
 
+import os
 import sqlite3
 import tempfile
 import unittest
@@ -9,7 +10,9 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import urlsplit
 
-from app import app
+# Import without requiring a developer's private .env settings.
+with patch.dict(os.environ, {'SECRET_KEY': 'test-only-key', 'FLASK_DEBUG': 'false'}):
+    from app import app
 import database
 
 
