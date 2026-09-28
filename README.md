@@ -126,7 +126,7 @@ Work on a feature branch, never commit directly to main or develop.
 1. Check out develop and pull the latest
 2. Create a branch named after what you are building (e.g. feature/student-list, feature/tutor-page)
 3. Do your work and commit on that branch
-4. Push and open a pull request into develop
+4. Push and open a pull request into main for final changes
 
 ---
 
