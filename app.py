@@ -73,6 +73,38 @@ def tutor_detail(tutor_id):
     return render_template('tutor_detail.html', tutor=tutor)
 
 
+@app.route('/tutors/<int:tutor_id>/availability', methods=['GET', 'POST'])
+def availability(tutor_id):
+    tutor = database.get_tutor(tutor_id)
+    if tutor is None:
+        flash('Tutor not found.', 'error')
+        return redirect(url_for('tutors'))
+
+    if request.method == 'POST':
+        day = request.form.get('day_of_week', '').strip()
+        start = request.form.get('start_time', '').strip()
+        end = request.form.get('end_time', '').strip()
+
+        if not day or not start or not end:
+            flash('All fields are required.', 'error')
+        elif start >= end:
+            flash('End time must be after start time.', 'error')
+        else:
+            database.add_availability(tutor_id, day, start, end)
+            flash('Availability saved.', 'success')
+            return redirect(url_for('availability', tutor_id=tutor_id))
+
+    windows = database.get_availability(tutor_id)
+    return render_template('availability.html', tutor=tutor, windows=windows)
+
+
+@app.route('/availability/<int:availability_id>/delete', methods=['POST'])
+def delete_availability(availability_id):
+    database.delete_availability(availability_id)
+    tutor_id = request.form.get('tutor_id')
+    return redirect(url_for('availability', tutor_id=tutor_id))
+
+
 @app.route('/sessions')
 def sessions():
     return render_template('index.html')

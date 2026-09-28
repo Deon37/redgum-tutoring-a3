@@ -66,7 +66,6 @@ def _validate_tutor_details(name, subjects):
 
 
 def add_tutor(name, subjects):
-    """Save a new active tutor with a required name and subjects."""
     _validate_tutor_details(name, subjects)
     db = get_db()
     with db:
@@ -77,7 +76,6 @@ def add_tutor(name, subjects):
 
 
 def update_tutor(tutor_id, name, subjects):
-    """Update tutor details without changing status or related records."""
     _validate_tutor_details(name, subjects)
     db = get_db()
     with db:
@@ -87,3 +85,26 @@ def update_tutor(tutor_id, name, subjects):
         )
         if cursor.rowcount == 0:
             raise ValueError(f'Tutor {tutor_id} was not found.')
+
+
+def get_availability(tutor_id):
+    db = get_db()
+    return db.execute(
+        'SELECT * FROM availability WHERE tutor_id = ? ORDER BY day_of_week, start_time',
+        (tutor_id,)
+    ).fetchall()
+
+
+def add_availability(tutor_id, day_of_week, start_time, end_time):
+    db = get_db()
+    db.execute(
+        'INSERT INTO availability (tutor_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)',
+        (tutor_id, day_of_week, start_time, end_time)
+    )
+    db.commit()
+
+
+def delete_availability(availability_id):
+    db = get_db()
+    db.execute('DELETE FROM availability WHERE id = ?', (availability_id,))
+    db.commit()
