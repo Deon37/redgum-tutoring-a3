@@ -1,5 +1,8 @@
 *.db
 __pycache__/
 .env
+.env.*
+!.env.example
+.DS_Store
 *.pyc
 .venv/
