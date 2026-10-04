@@ -10,6 +10,9 @@
     </div>
     <a href="{{ url_for('tutors') }}" class="btn btn-secondary">Back to Tutors</a>
     <a href="{{ url_for('availability', tutor_id=tutor['id']) }}" class="btn btn-primary">Availability</a>
+    <form method="POST" action="{{ url_for('deactivate_tutor', tutor_id=tutor['id']) }}" style="display:inline;">
+        <button type="submit" class="btn btn-danger">Deactivate</button>
+    </form>
 </div>
 
 <form class="form" method="POST" action="{{ url_for('tutor_detail', tutor_id=tutor['id']) }}">

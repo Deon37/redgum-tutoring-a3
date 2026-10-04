@@ -110,6 +110,16 @@ def tutor_detail(tutor_id):
     return render_template('tutor_detail.html', tutor=tutor)
 
 
+@app.route('/tutors/<int:tutor_id>/deactivate', methods=['POST'])
+def deactivate_tutor(tutor_id):
+    tutor = database.get_tutor(tutor_id)
+    if tutor is None:
+        abort(404)
+    database.deactivate_tutor(tutor_id)
+    flash(f'{tutor["name"]} has been deactivated.', 'success')
+    return redirect(url_for('tutors'))
+
+
 @app.route('/tutors/<int:tutor_id>/availability', methods=['GET', 'POST'])
 def availability(tutor_id):
     tutor = database.get_tutor(tutor_id)

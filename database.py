@@ -112,6 +112,12 @@ def update_tutor(tutor_id, name, subjects):
             raise ValueError(f'Tutor {tutor_id} was not found.')
 
 
+def deactivate_tutor(tutor_id):
+    db = get_db()
+    db.execute('UPDATE tutors SET active = 0 WHERE id = ?', (tutor_id,))
+    db.commit()
+
+
 def get_availability(tutor_id):
     db = get_db()
     return db.execute(
