@@ -34,6 +34,7 @@
             <th>Year</th>
             <th>Contact Name</th>
             <th>Contact Phone</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -43,6 +44,7 @@
             <td>{{ student['year_level'] }}</td>
             <td>{{ student['contact_name'] }}</td>
             <td>{{ student['contact_phone'] }}</td>
+            <td><a href="{{ url_for('student_detail', student_id=student['id']) }}" class="btn btn-secondary">Edit</a></td>
         </tr>
         {% endfor %}
     </tbody>

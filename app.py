@@ -36,6 +36,32 @@ def students():
     return render_template('students.html', students=student_list, search=query)
 
 
+@app.route('/students/<int:student_id>', methods=['GET', 'POST'])
+def student_detail(student_id):
+    student = database.get_student(student_id)
+    if student is None:
+        abort(404)
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        year_level = request.form.get('year_level', '').strip()
+        contact_name = request.form.get('contact_name', '').strip()
+        contact_phone = request.form.get('contact_phone', '').strip()
+
+        if not name or not year_level or not contact_name or not contact_phone:
+            flash('All fields are required.', 'error')
+        else:
+            try:
+                database.update_student(student_id, name, year_level, contact_name, contact_phone)
+            except ValueError as error:
+                flash(str(error), 'error')
+            else:
+                flash(f'{name} updated.', 'success')
+                return redirect(url_for('students'))
+
+    return render_template('student_detail.html', student=student)
+
+
 @app.route('/tutors', methods=['GET', 'POST'])
 def tutors():
     if request.method == 'POST':

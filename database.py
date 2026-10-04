@@ -38,6 +38,24 @@ def add_student(name, year_level, contact_name, contact_phone):
     db.commit()
 
 
+def get_student(student_id):
+    db = get_db()
+    return db.execute(
+        'SELECT * FROM students WHERE id = ?', (student_id,)
+    ).fetchone()
+
+
+def update_student(student_id, name, year_level, contact_name, contact_phone):
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            'UPDATE students SET name = ?, year_level = ?, contact_name = ?, contact_phone = ? WHERE id = ?',
+            (name, year_level, contact_name, contact_phone, student_id)
+        )
+        if cursor.rowcount == 0:
+            raise ValueError(f'Student {student_id} was not found.')
+
+
 def search_students(query):
     db = get_db()
     return db.execute(
