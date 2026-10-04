@@ -62,6 +62,16 @@ def student_detail(student_id):
     return render_template('student_detail.html', student=student)
 
 
+@app.route('/students/<int:student_id>/deactivate', methods=['POST'])
+def deactivate_student(student_id):
+    student = database.get_student(student_id)
+    if student is None:
+        abort(404)
+    database.deactivate_student(student_id)
+    flash(f'{student["name"]} has been deactivated.', 'success')
+    return redirect(url_for('students'))
+
+
 @app.route('/tutors', methods=['GET', 'POST'])
 def tutors():
     if request.method == 'POST':

@@ -9,6 +9,9 @@
         <p>Update the student's details.</p>
     </div>
     <a href="{{ url_for('students') }}" class="btn btn-secondary">Back to Students</a>
+    <form method="POST" action="{{ url_for('deactivate_student', student_id=student['id']) }}" style="display:inline;">
+        <button type="submit" class="btn btn-danger">Deactivate</button>
+    </form>
 </div>
 
 <form class="form" method="POST" action="{{ url_for('student_detail', student_id=student['id']) }}">

@@ -56,6 +56,12 @@ def update_student(student_id, name, year_level, contact_name, contact_phone):
             raise ValueError(f'Student {student_id} was not found.')
 
 
+def deactivate_student(student_id):
+    db = get_db()
+    db.execute('UPDATE students SET active = 0 WHERE id = ?', (student_id,))
+    db.commit()
+
+
 def search_students(query):
     db = get_db()
     return db.execute(
