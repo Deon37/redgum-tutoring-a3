@@ -2,7 +2,7 @@
 
 A web app to manage students, tutors, availability, and session bookings for Redgum Tutoring.
 
-Built with Python 3.12, Flask 3.1.0, SQLite, and server-rendered HTML/CSS.
+Built with Python 3.12, Flask 3.1.0, SQLite, and vanilla HTML/CSS/JS.
 
 ---
 
@@ -54,8 +54,6 @@ The app reads `.env` from the repository root using [python-dotenv](https://pypi
 
 Run this from the repository root. The setup script replaces any existing `redgum.db` with demo data, so back up any records you want to keep before running it again.
 
-For an existing database, run `init_db.py --upgrade` instead to add the blackout table without resetting records.
-
 5. Run the app
 ```powershell
 .\.venv\Scripts\python.exe app.py
@@ -85,7 +83,7 @@ Configuration tests check missing keys, debug parsing and environment precedence
 - `update_tutor(tutor_id, name, subjects)` saves both supplied fields and commits the change, preserving the ID, active status, other tutors, sessions and availability.
 - Subjects use the existing schema's text field, such as `Physics, Chemistry`.
 
-These database tests cover tutor creation and editing; preserving availability records does not test booking validation.
+The case study requires creating tutors and changing their names and subjects. Deactivation, booking options and availability window validation are separate work, as preserving availability here does not test the booking availability rule.
 
 The route tests in `tests/test_tutor_routes.py` cover the implemented GET and POST `/tutors` routes. They use Flask's test client and require no additional dependencies.
 
@@ -101,71 +99,7 @@ The tutor detail route tests cover the implemented `GET /tutors/<id>` and `POST 
 - POST updates only that tutor's name and subjects.
 - Missing required fields display `required` feedback (200 or 400) without changes.
 
-Tutor deactivation and booking validation are implemented; these tutor route tests focus on creation and editing.
-
-### Weekly schedule tests
-
-`tests/test_weekly_schedule.py` covers the Tuesday-to-Saturday overview, booking
-details for all tutors, selected-week filtering, chronological order and empty
-weeks. Open **Schedule** to view the current week in Ipswich time, select a
-Tuesday, or use Previous/Next Week. `GET /schedule?week_start=YYYY-MM-DD` accepts
-a Tuesday date and displays ISO dates, `HH:MM` times and booking table rows.
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_weekly_schedule.py -v
-```
-
-### Tutor blackout tests
-
-`tests/test_tutor_blackouts.py` covers saving tutor-specific periods, date
-validation, booking refusal, unaffected dates/tutors and refusal of session moves.
-Open **Tutors > tutor name > Availability > Blackout Periods** to record inclusive
-whole-day start/end dates. Blackouts override weekly availability for bookings
-and session moves. Existing bookings remain unchanged. The route is
-`GET/POST /tutors/<id>/blackouts`.
-
-For an existing database, run this from the repository root to add the table
-while preserving records:
-
-```powershell
-.\.venv\Scripts\python.exe init_db.py --upgrade
-```
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_tutor_blackouts.py -v
-```
-
-### Subject filter tests
-
-`tests/test_subject_filter.py` covers qualified tutor choices, availability,
-blackouts, empty results and booking validation. In **Sessions**, enter a subject
-and select **Find Tutors**; optionally supply date, start time and length together
-(60 or 90 minutes) to filter by availability.
-`GET /sessions?subject=Physics` matches whole comma-separated subjects, ignoring
-case and surrounding spaces; add `date`, `start_time` and `length_mins` to filter
-by availability. The booking form carries `subject` in POST, which rejects
-unqualified/inactive tutors. A subject is optional. Availability checks use weekly
-windows and blackouts; they do not check existing bookings for time conflicts.
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_subject_filter.py -v
-```
-
-### Session notes tests
-
-`tests/test_session_notes.py` covers editable notes, persistent saves/updates,
-preserved booking details, student learning history and invalid requests.
-Open a session through **Sessions > Edit**, then use **Session Notes > Save Notes**.
-Use **View Student Progress** to read notes from all tutors, with session dates
-and statuses. Saving notes preserves booking details and line breaks. The route
-is `POST /sessions/<id>/notes`; a missing field returns 400 and an unknown session
-returns 404. The existing schema already has `notes`, so no additional migration is needed.
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_session_notes.py -v
-```
-
-All 46 tests pass, including the four session-notes tests.
+Deactivation and booking validation remain separate route work.
 
 ## Project Structure
 
@@ -175,11 +109,11 @@ All 46 tests pass, including the four session-notes tests.
 | `config.py` | Loads and validates the secret key and debug setting |
 | `.env.example` | Safe configuration template to copy on first setup |
 | `database.py` | Database connection and query functions |
-| `init_db.py` | Creates demo data; `--upgrade` adds missing tables without resetting records |
+| `init_db.py` | Creates the database and reloads demo data |
 | `schema.sql` | Table definitions |
 | `seed.sql` | Demo records loaded during database setup |
 | `requirements.txt` | Python dependencies |
-| `tests/` | Configuration, tutor database/routes, weekly schedule, blackout, subject-filter and session-notes tests |
+| `tests/` | Tutor regression and configuration tests |
 | `static/style.css` | All styling |
 | `templates/` | HTML pages |
 

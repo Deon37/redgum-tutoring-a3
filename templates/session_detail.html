@@ -17,11 +17,11 @@
 <form class="form" method="POST" action="{{ url_for('session_detail', session_id=session['id']) }}">
     <div class="form-group">
         <label for="date">Date</label>
-        <input type="date" id="date" name="date" value="{{ request.form.get('date', session['date']) }}" required>
+        <input type="date" id="date" name="date" value="{{ request.form.get('date', '') if request.method == 'POST' else session['date'] }}" required>
     </div>
     <div class="form-group">
         <label for="start_time">Start Time</label>
-        <input type="time" id="start_time" name="start_time" value="{{ request.form.get('start_time', session['start_time']) }}" required>
+        <input type="time" id="start_time" name="start_time" value="{{ request.form.get('start_time', '') if request.method == 'POST' else session['start_time'] }}" required>
     </div>
     <div class="form-group">
         <label for="length_mins">Length</label>
@@ -31,17 +31,5 @@
         </select>
     </div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
-</form>
-
-<h2 id="session-notes">Session Notes</h2>
-<p>Record the topics covered, learning progress and next steps for subsequent tutors.</p>
-<form class="form" method="POST" action="{{ url_for('session_notes', session_id=session['id']) }}">
-    <div class="form-group">
-        <label for="notes">Topics covered and progress</label>
-        <textarea id="notes" name="notes" rows="6">{{ request.form.get('notes', session['notes'] or '') }}</textarea>
-    </div>
-    <button type="submit" class="btn btn-primary">Save Notes</button>
-    <a href="{{ url_for('student_detail', student_id=session['student_id']) }}#learning-progress"
-       class="btn btn-secondary">View Student Progress</a>
 </form>
 {% endblock %}

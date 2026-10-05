@@ -1,4 +1,3 @@
-from datetime import date, datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from config import load_settings
 import database
@@ -60,8 +59,7 @@ def student_detail(student_id):
                 flash(f'{name} updated.', 'success')
                 return redirect(url_for('students'))
 
-    return render_template('student_detail.html', student=student,
-                           sessions=database.get_student_sessions(student_id))
+    return render_template('student_detail.html', student=student)
 
 
 @app.route('/students/<int:student_id>/deactivate', methods=['POST'])
@@ -147,27 +145,6 @@ def availability(tutor_id):
     return render_template('availability.html', tutor=tutor, windows=windows)
 
 
-@app.route('/tutors/<int:tutor_id>/blackouts', methods=['GET', 'POST'])
-def blackouts(tutor_id):
-    tutor = database.get_tutor(tutor_id)
-    if tutor is None:
-        abort(404)
-
-    if request.method == 'POST':
-        start_date = request.form.get('start_date', '').strip()
-        end_date = request.form.get('end_date', '').strip()
-        try:
-            database.add_blackout(tutor_id, start_date, end_date)
-        except ValueError as error:
-            flash(str(error), 'error')
-        else:
-            flash('Blackout period saved.', 'success')
-            return redirect(url_for('blackouts', tutor_id=tutor_id))
-
-    return render_template('blackouts.html', tutor=tutor,
-                           periods=database.get_blackouts(tutor_id))
-
-
 @app.route('/availability/<int:availability_id>/delete', methods=['POST'])
 def delete_availability(availability_id):
     database.delete_availability(availability_id)
@@ -177,66 +154,26 @@ def delete_availability(availability_id):
 
 @app.route('/sessions', methods=['GET', 'POST'])
 def sessions():
-    submitted = request.form if request.method == 'POST' else request.args
-    values = {field: submitted.get(field, '').strip() for field in (
-        'student_id', 'tutor_id', 'subject', 'date', 'start_time', 'length_mins',
-    )}
-    subject = values['subject']
-    date = values['date']
-    start_time = values['start_time']
-    length_mins = None
-    slot_error = None
-    if any((date, start_time, values['length_mins'])):
-        if not all((date, start_time, values['length_mins'])):
-            slot_error = 'Date, start time and length are required to filter availability.'
-        else:
-            try:
-                length_mins = int(values['length_mins'])
-                if (datetime.strptime(date, '%Y-%m-%d').date().isoformat() != date
-                        or datetime.strptime(start_time, '%H:%M').strftime('%H:%M') != start_time
-                        or length_mins not in (60, 90)):
-                    raise ValueError
-            except ValueError:
-                slot_error = 'Enter a valid date, start time and a length of 60 or 90 minutes.'
-
     if request.method == 'POST':
-        student_id = values['student_id']
-        tutor_id = values['tutor_id']
-        if not all((student_id, tutor_id, date, start_time, values['length_mins'])):
+        student_id = request.form.get('student_id', '').strip()
+        tutor_id = request.form.get('tutor_id', '').strip()
+        date = request.form.get('date', '').strip()
+        start_time = request.form.get('start_time', '').strip()
+        length_mins = request.form.get('length_mins', '').strip()
+        if not student_id or not tutor_id or not date or not start_time or not length_mins:
             flash('All fields are required.', 'error')
-        elif slot_error:
-            flash(slot_error, 'error')
         else:
-            tutor = database.get_tutor(tutor_id)
-            if tutor is None:
-                flash('Tutor not found. Select an active tutor.', 'error')
-            elif not tutor['active']:
-                flash('This tutor is inactive. Select an active tutor.', 'error')
-            elif subject and not database.tutor_teaches_subject(tutor, subject):
-                flash(f'{tutor["name"]} is not qualified to teach {subject}.', 'error')
+            ok, reason = database.check_availability(tutor_id, date, start_time, int(length_mins))
+            if not ok:
+                flash(reason, 'error')
             else:
-                ok, reason = database.check_availability(tutor_id, date, start_time, length_mins)
-                if not ok:
-                    flash(reason, 'error')
-                else:
-                    database.book_session(student_id, tutor_id, date, start_time, length_mins)
-                    flash('Session booked.', 'success')
-                    return redirect(url_for('sessions', subject=subject) if subject else url_for('sessions'))
-    elif slot_error:
-        flash(slot_error, 'error')
-
-    subjects = {}
-    for tutor in database.get_tutors():
-        for entry in tutor['subjects'].split(','):
-            if entry.strip():
-                subjects.setdefault(entry.strip().casefold(), entry.strip())
+                database.book_session(student_id, tutor_id, date, start_time, int(length_mins))
+                flash('Session booked.', 'success')
+                return redirect(url_for('sessions'))
     return render_template('sessions.html',
         students=database.get_students(),
-        tutors=database.get_tutors(subject, date if not slot_error else None,
-                                  start_time if not slot_error else None, length_mins),
-        subjects=sorted(subjects.values(), key=str.casefold),
-        form_values=values,
-        sessions=database.get_sessions(),
+        tutors=database.get_tutors(),
+        sessions=database.get_sessions()
     )
 
 
@@ -265,20 +202,6 @@ def session_detail(session_id):
     return render_template('session_detail.html', session=session)
 
 
-@app.route('/sessions/<int:session_id>/notes', methods=['POST'])
-def session_notes(session_id):
-    session = database.get_session(session_id)
-    if session is None:
-        abort(404)
-    if 'notes' not in request.form:
-        flash('Session notes are required.', 'error')
-        return render_template('session_detail.html', session=session), 400
-
-    database.update_session_notes(session_id, request.form['notes'])
-    flash('Session notes saved.', 'success')
-    return redirect(url_for('session_detail', session_id=session_id))
-
-
 @app.route('/sessions/<int:session_id>/cancel', methods=['POST'])
 def cancel_session(session_id):
     session = database.get_session(session_id)
@@ -291,36 +214,7 @@ def cancel_session(session_id):
 
 @app.route('/schedule')
 def schedule():
-    # Default to this calendar week's Tuesday in the centre's Ipswich time zone.
-    today = datetime.now(timezone(timedelta(hours=10))).date()
-    week_start = today - timedelta(days=today.weekday()) + timedelta(days=1)
-    selected_week = request.args.get('week_start')
-    status_code = 200
-    if selected_week is not None:
-        try:
-            selected_date = date.fromisoformat(selected_week)
-            if selected_date.isoformat() != selected_week or selected_date.weekday() != 1:
-                raise ValueError
-            selected_date + timedelta(days=4)
-        except (ValueError, OverflowError):
-            flash('Choose a valid Tuesday date for the start of the week.', 'error')
-            status_code = 400
-        else:
-            week_start = selected_date
-
-    week_end = week_start + timedelta(days=4)
-    sessions = database.get_week_sessions(week_start.isoformat(), week_end.isoformat())
-    days = []
-    for offset, name in enumerate(('Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')):
-        day = (week_start + timedelta(days=offset)).isoformat()
-        days.append({'name': name, 'date': day,
-                     'sessions': [session for session in sessions if session['date'] == day]})
-
-    previous_week = week_start - timedelta(days=7) if week_start.toordinal() > 7 else None
-    next_week = week_start + timedelta(days=7) if (date.max - week_start).days >= 11 else None
-    return render_template('schedule.html', days=days, week_start=week_start,
-                           week_end=week_end, previous_week=previous_week,
-                           next_week=next_week, has_sessions=bool(sessions)), status_code
+    return render_template('index.html')
 
 
 if __name__ == '__main__':
