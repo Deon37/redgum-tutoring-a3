@@ -1,5 +1,3 @@
-"""Tutor persistence contract; run with python -m unittest discover -s tests -v."""
-
 import sqlite3
 import tempfile
 import unittest

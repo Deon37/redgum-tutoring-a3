@@ -1,5 +1,3 @@
-"""Configuration must be explicit without publishing private settings."""
-
 import os
 from pathlib import Path
 import runpy

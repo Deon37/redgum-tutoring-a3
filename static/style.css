@@ -241,7 +241,8 @@ textarea:focus {
     color: #1e8449;
 }
 
-.badge-no-show {
+.badge-no-show,
+.badge-missed {
     background: #fde8d8;
     color: #a04000;
 }
@@ -292,4 +293,43 @@ textarea:focus {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+}
+
+/* Weekly schedule */
+.schedule-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.schedule-table {
+    overflow-x: auto;
+}
+
+.schedule-table table {
+    min-width: 640px;
+}
+
+.schedule-caption {
+    text-align: left;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* Student learning progress */
+.session-history {
+    overflow-x: auto;
+}
+
+.session-history table {
+    min-width: 640px;
+}
+
+.session-notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    min-width: 180px;
+    max-width: 420px;
 }
