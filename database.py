@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from flask import g
 
 DATABASE = 'redgum.db'
@@ -70,24 +70,11 @@ def search_students(query):
     ).fetchall()
 
 
-def get_tutors(subject='', date=None, start_time=None, length_mins=None):
-    """List active tutors, optionally matching a subject and complete session slot."""
+def get_tutors():
     db = get_db()
-    tutors = db.execute(
+    return db.execute(
         'SELECT * FROM tutors WHERE active = 1 ORDER BY name'
     ).fetchall()
-    if subject:
-        tutors = [tutor for tutor in tutors if tutor_teaches_subject(tutor, subject)]
-    if date and start_time and length_mins:
-        tutors = [tutor for tutor in tutors
-                  if check_availability(tutor['id'], date, start_time, length_mins)[0]]
-    return tutors
-
-
-def tutor_teaches_subject(tutor, subject):
-    return subject.strip().casefold() in {
-        entry.strip().casefold() for entry in tutor['subjects'].split(',') if entry.strip()
-    }
 
 
 def get_tutor(tutor_id):
@@ -154,35 +141,6 @@ def delete_availability(availability_id):
     db.commit()
 
 
-def get_blackouts(tutor_id):
-    return get_db().execute(
-        'SELECT * FROM blackouts WHERE tutor_id = ? ORDER BY start_date, end_date, id',
-        (tutor_id,),
-    ).fetchall()
-
-
-def add_blackout(tutor_id, start_date, end_date):
-    for field, value in (('start date', start_date), ('end date', end_date)):
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError(f'Blackout {field} is required.')
-        try:
-            parsed = date.fromisoformat(value)
-        except ValueError:
-            raise ValueError(f'Blackout {field} must be a valid date (YYYY-MM-DD).') from None
-        if parsed.isoformat() != value:
-            raise ValueError(f'Blackout {field} must be a valid date (YYYY-MM-DD).')
-    if end_date < start_date:
-        raise ValueError('Blackout end date must be on or after the start date.')
-    if get_tutor(tutor_id) is None:
-        raise ValueError('Tutor not found.')
-    db = get_db()
-    with db:
-        db.execute(
-            'INSERT INTO blackouts (tutor_id, start_date, end_date) VALUES (?, ?, ?)',
-            (tutor_id, start_date, end_date),
-        )
-
-
 def _to_day_name(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d').strftime('%A')
 
@@ -195,7 +153,7 @@ def _session_end(start_time, length_mins):
 def get_session(session_id):
     db = get_db()
     return db.execute(
-        '''SELECT s.id, s.student_id, s.tutor_id, s.date, s.start_time, s.length_mins, s.status, s.notes,
+        '''SELECT s.id, s.student_id, s.tutor_id, s.date, s.start_time, s.length_mins, s.status,
                   st.name AS student_name, t.name AS tutor_name
            FROM sessions s
            JOIN students st ON st.id = s.student_id
@@ -203,29 +161,6 @@ def get_session(session_id):
            WHERE s.id = ?''',
         (session_id,)
     ).fetchone()
-
-
-def update_session_notes(session_id, notes):
-    """Save notes without changing the session's booking details or status."""
-    if not isinstance(notes, str):
-        raise ValueError('Session notes must be text.')
-    db = get_db()
-    with db:
-        cursor = db.execute('UPDATE sessions SET notes = ? WHERE id = ?', (notes, session_id))
-        if cursor.rowcount == 0:
-            raise ValueError('Session not found.')
-
-
-def get_student_sessions(student_id):
-    return get_db().execute(
-        '''SELECT s.id, s.date, s.start_time, s.length_mins, s.status, s.notes,
-                  t.name AS tutor_name
-           FROM sessions s
-           JOIN tutors t ON t.id = s.tutor_id
-           WHERE s.student_id = ?
-           ORDER BY s.date DESC, s.start_time DESC, s.id DESC''',
-        (student_id,),
-    ).fetchall()
 
 
 def cancel_session(session_id):
@@ -244,20 +179,9 @@ def update_session(session_id, date, start_time, length_mins):
 
 
 def check_availability(tutor_id, date, start_time, length_mins):
-    booking_date = datetime.strptime(date, '%Y-%m-%d')
-    day = booking_date.strftime('%A')
+    day = _to_day_name(date)
     end_time = _session_end(start_time, length_mins)
     db = get_db()
-    blackout = db.execute(
-        'SELECT start_date, end_date FROM blackouts '
-        'WHERE tutor_id = ? AND start_date <= ? AND end_date >= ? '
-        'ORDER BY start_date, id LIMIT 1',
-        (tutor_id, booking_date.date().isoformat(), booking_date.date().isoformat()),
-    ).fetchone()
-    if blackout is not None:
-        tutor = get_tutor(tutor_id)
-        return False, (f'{tutor["name"]} is away during a blackout from '
-                       f'{blackout["start_date"]} to {blackout["end_date"]}.')
     windows = db.execute(
         'SELECT * FROM availability WHERE tutor_id = ? AND day_of_week = ?',
         (tutor_id, day)
@@ -266,7 +190,7 @@ def check_availability(tutor_id, date, start_time, length_mins):
         tutor = get_tutor(tutor_id)
         return False, f'{tutor["name"]} is not available on {day}s.'
     for w in windows:
-        if w['start_time'] <= start_time < end_time <= w['end_time']:
+        if w['start_time'] <= start_time and w['end_time'] >= end_time:
             return True, None
     tutor = get_tutor(tutor_id)
     for w in windows:
@@ -295,18 +219,4 @@ def get_sessions():
            JOIN students st ON st.id = s.student_id
            JOIN tutors t ON t.id = s.tutor_id
            ORDER BY s.date DESC, s.start_time DESC'''
-    ).fetchall()
-
-
-def get_week_sessions(start_date, end_date):
-    """Return all tutors' sessions within the inclusive schedule date range."""
-    return get_db().execute(
-        '''SELECT s.id, st.name AS student_name, t.name AS tutor_name,
-                  s.date, s.start_time, s.length_mins, s.status
-           FROM sessions s
-           JOIN students st ON st.id = s.student_id
-           JOIN tutors t ON t.id = s.tutor_id
-           WHERE s.date BETWEEN ? AND ?
-           ORDER BY s.date, s.start_time, s.id''',
-        (start_date, end_date),
     ).fetchall()

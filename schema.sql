@@ -23,15 +23,6 @@ CREATE TABLE IF NOT EXISTS availability (
     FOREIGN KEY (tutor_id) REFERENCES tutors(id)
 );
 
-CREATE TABLE IF NOT EXISTS blackouts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tutor_id INTEGER NOT NULL,
-    start_date TEXT NOT NULL,
-    end_date TEXT NOT NULL,
-    CHECK (end_date >= start_date),
-    FOREIGN KEY (tutor_id) REFERENCES tutors(id)
-);
-
 CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,

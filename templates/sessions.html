@@ -43,22 +43,13 @@
 {% endif %}
 
 <h2 id="book-session" class="mt-24">Book a Session</h2>
-<p>Enter a subject to find qualified tutors. Add a date, start time and length to check availability.</p>
 <form class="form" method="POST" action="{{ url_for('sessions') }}">
-    <div class="form-group">
-        <label for="subject">Subject (optional)</label>
-        <input type="text" id="subject" name="subject" list="subjects"
-               value="{{ form_values['subject'] }}" placeholder="Any subject">
-        <datalist id="subjects">
-            {% for subject in subjects %}<option value="{{ subject }}"></option>{% endfor %}
-        </datalist>
-    </div>
     <div class="form-group">
         <label for="student_id">Student</label>
         <select id="student_id" name="student_id" required>
             <option value="">Select a student</option>
             {% for student in students %}
-            <option value="{{ student['id'] }}" {% if form_values['student_id'] == student['id']|string %}selected{% endif %}>
+            <option value="{{ student['id'] }}" {% if request.form.get('student_id') == student['id']|string %}selected{% endif %}>
                 {{ student['name'] }} (Year {{ student['year_level'] }})
             </option>
             {% endfor %}
@@ -69,32 +60,28 @@
         <select id="tutor_id" name="tutor_id" required>
             <option value="">Select a tutor</option>
             {% for tutor in tutors %}
-            <option value="{{ tutor['id'] }}" {% if form_values['tutor_id'] == tutor['id']|string %}selected{% endif %}>
+            <option value="{{ tutor['id'] }}" {% if request.form.get('tutor_id') == tutor['id']|string %}selected{% endif %}>
                 {{ tutor['name'] }}
             </option>
             {% endfor %}
         </select>
-        {% if not tutors %}<p class="mt-16">No matching tutors for these filters.</p>{% endif %}
     </div>
     <div class="form-group">
         <label for="date">Date</label>
-        <input type="date" id="date" name="date" value="{{ form_values['date'] }}" required>
+        <input type="date" id="date" name="date" value="{{ request.form.get('date', '') }}" required>
     </div>
     <div class="form-group">
         <label for="start_time">Start Time</label>
-        <input type="time" id="start_time" name="start_time" value="{{ form_values['start_time'] }}" required>
+        <input type="time" id="start_time" name="start_time" value="{{ request.form.get('start_time', '') }}" required>
     </div>
     <div class="form-group">
         <label for="length_mins">Length</label>
         <select id="length_mins" name="length_mins" required>
             <option value="">Select length</option>
-            <option value="60" {% if form_values['length_mins'] == '60' %}selected{% endif %}>60 minutes</option>
-            <option value="90" {% if form_values['length_mins'] == '90' %}selected{% endif %}>90 minutes</option>
+            <option value="60" {% if request.form.get('length_mins') == '60' %}selected{% endif %}>60 minutes</option>
+            <option value="90" {% if request.form.get('length_mins') == '90' %}selected{% endif %}>90 minutes</option>
         </select>
     </div>
-    <button type="submit" class="btn btn-secondary" formmethod="GET" formnovalidate
-            formaction="{{ url_for('sessions') }}#book-session">Find Tutors</button>
-    <a href="{{ url_for('sessions') }}#book-session" class="btn btn-secondary">Clear Filters</a>
-    <button type="submit" class="btn btn-primary" {% if not tutors %}disabled{% endif %}>Book Session</button>
+    <button type="submit" class="btn btn-primary">Book Session</button>
 </form>
 {% endblock %}

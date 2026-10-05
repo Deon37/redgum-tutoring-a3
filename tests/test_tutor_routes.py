@@ -1,3 +1,5 @@
+"""HTTP contract for listing, creating, viewing and updating tutors."""
+
 import os
 import sqlite3
 import tempfile
