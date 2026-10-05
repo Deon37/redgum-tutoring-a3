@@ -9,6 +9,9 @@
         <p>{{ session['student_name'] }} with {{ session['tutor_name'] }}</p>
     </div>
     <a href="{{ url_for('sessions') }}" class="btn btn-secondary">Back to Sessions</a>
+    <form method="POST" action="{{ url_for('cancel_session', session_id=session['id']) }}" style="display:inline;">
+        <button type="submit" class="btn btn-danger">Cancel Session</button>
+    </form>
 </div>
 
 <form class="form" method="POST" action="{{ url_for('session_detail', session_id=session['id']) }}">

@@ -202,6 +202,16 @@ def session_detail(session_id):
     return render_template('session_detail.html', session=session)
 
 
+@app.route('/sessions/<int:session_id>/cancel', methods=['POST'])
+def cancel_session(session_id):
+    session = database.get_session(session_id)
+    if session is None:
+        abort(404)
+    database.cancel_session(session_id)
+    flash('Session cancelled.', 'success')
+    return redirect(url_for('sessions'))
+
+
 @app.route('/schedule')
 def schedule():
     return render_template('index.html')

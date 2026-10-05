@@ -163,6 +163,12 @@ def get_session(session_id):
     ).fetchone()
 
 
+def cancel_session(session_id):
+    db = get_db()
+    db.execute('UPDATE sessions SET status = ? WHERE id = ?', ('cancelled', session_id))
+    db.commit()
+
+
 def update_session(session_id, date, start_time, length_mins):
     db = get_db()
     db.execute(
