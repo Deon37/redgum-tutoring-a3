@@ -176,26 +176,66 @@ def delete_availability(availability_id):
 
 @app.route('/sessions', methods=['GET', 'POST'])
 def sessions():
-    if request.method == 'POST':
-        student_id = request.form.get('student_id', '').strip()
-        tutor_id = request.form.get('tutor_id', '').strip()
-        date = request.form.get('date', '').strip()
-        start_time = request.form.get('start_time', '').strip()
-        length_mins = request.form.get('length_mins', '').strip()
-        if not student_id or not tutor_id or not date or not start_time or not length_mins:
-            flash('All fields are required.', 'error')
+    submitted = request.form if request.method == 'POST' else request.args
+    values = {field: submitted.get(field, '').strip() for field in (
+        'student_id', 'tutor_id', 'subject', 'date', 'start_time', 'length_mins',
+    )}
+    subject = values['subject']
+    date = values['date']
+    start_time = values['start_time']
+    length_mins = None
+    slot_error = None
+    if any((date, start_time, values['length_mins'])):
+        if not all((date, start_time, values['length_mins'])):
+            slot_error = 'Date, start time and length are required to filter availability.'
         else:
-            ok, reason = database.check_availability(tutor_id, date, start_time, int(length_mins))
-            if not ok:
-                flash(reason, 'error')
+            try:
+                length_mins = int(values['length_mins'])
+                if (datetime.strptime(date, '%Y-%m-%d').date().isoformat() != date
+                        or datetime.strptime(start_time, '%H:%M').strftime('%H:%M') != start_time
+                        or length_mins not in (60, 90)):
+                    raise ValueError
+            except ValueError:
+                slot_error = 'Enter a valid date, start time and a length of 60 or 90 minutes.'
+
+    if request.method == 'POST':
+        student_id = values['student_id']
+        tutor_id = values['tutor_id']
+        if not all((student_id, tutor_id, date, start_time, values['length_mins'])):
+            flash('All fields are required.', 'error')
+        elif slot_error:
+            flash(slot_error, 'error')
+        else:
+            tutor = database.get_tutor(tutor_id)
+            if tutor is None:
+                flash('Tutor not found. Select an active tutor.', 'error')
+            elif not tutor['active']:
+                flash('This tutor is inactive. Select an active tutor.', 'error')
+            elif subject and not database.tutor_teaches_subject(tutor, subject):
+                flash(f'{tutor["name"]} is not qualified to teach {subject}.', 'error')
             else:
-                database.book_session(student_id, tutor_id, date, start_time, int(length_mins))
-                flash('Session booked.', 'success')
-                return redirect(url_for('sessions'))
+                ok, reason = database.check_availability(tutor_id, date, start_time, length_mins)
+                if not ok:
+                    flash(reason, 'error')
+                else:
+                    database.book_session(student_id, tutor_id, date, start_time, length_mins)
+                    flash('Session booked.', 'success')
+                    return redirect(url_for('sessions', subject=subject) if subject else url_for('sessions'))
+    elif slot_error:
+        flash(slot_error, 'error')
+
+    subjects = {}
+    for tutor in database.get_tutors():
+        for entry in tutor['subjects'].split(','):
+            if entry.strip():
+                subjects.setdefault(entry.strip().casefold(), entry.strip())
     return render_template('sessions.html',
         students=database.get_students(),
-        tutors=database.get_tutors(),
-        sessions=database.get_sessions()
+        tutors=database.get_tutors(subject, date if not slot_error else None,
+                                  start_time if not slot_error else None, length_mins),
+        subjects=sorted(subjects.values(), key=str.casefold),
+        form_values=values,
+        sessions=database.get_sessions(),
     )
 
 

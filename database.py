@@ -70,11 +70,24 @@ def search_students(query):
     ).fetchall()
 
 
-def get_tutors():
+def get_tutors(subject='', date=None, start_time=None, length_mins=None):
+    """List active tutors, optionally matching a subject and complete session slot."""
     db = get_db()
-    return db.execute(
+    tutors = db.execute(
         'SELECT * FROM tutors WHERE active = 1 ORDER BY name'
     ).fetchall()
+    if subject:
+        tutors = [tutor for tutor in tutors if tutor_teaches_subject(tutor, subject)]
+    if date and start_time and length_mins:
+        tutors = [tutor for tutor in tutors
+                  if check_availability(tutor['id'], date, start_time, length_mins)[0]]
+    return tutors
+
+
+def tutor_teaches_subject(tutor, subject):
+    return subject.strip().casefold() in {
+        entry.strip().casefold() for entry in tutor['subjects'].split(',') if entry.strip()
+    }
 
 
 def get_tutor(tutor_id):
@@ -230,7 +243,7 @@ def check_availability(tutor_id, date, start_time, length_mins):
         tutor = get_tutor(tutor_id)
         return False, f'{tutor["name"]} is not available on {day}s.'
     for w in windows:
-        if w['start_time'] <= start_time and w['end_time'] >= end_time:
+        if w['start_time'] <= start_time < end_time <= w['end_time']:
             return True, None
     tutor = get_tutor(tutor_id)
     for w in windows:
