@@ -21,6 +21,7 @@
             <th>Start</th>
             <th>Length</th>
             <th>Status</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -32,6 +33,7 @@
             <td>{{ s['start_time'] }}</td>
             <td>{{ s['length_mins'] }} mins</td>
             <td>{{ s['status'] }}</td>
+            <td><a href="{{ url_for('session_detail', session_id=s['id']) }}" class="btn btn-secondary">Edit</a></td>
         </tr>
         {% endfor %}
     </tbody>

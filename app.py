@@ -177,6 +177,31 @@ def sessions():
     )
 
 
+@app.route('/sessions/<int:session_id>/edit', methods=['GET', 'POST'])
+def session_detail(session_id):
+    session = database.get_session(session_id)
+    if session is None:
+        abort(404)
+
+    if request.method == 'POST':
+        date = request.form.get('date', '').strip()
+        start_time = request.form.get('start_time', '').strip()
+        length_mins = request.form.get('length_mins', '').strip()
+
+        if not date or not start_time or not length_mins:
+            flash('All fields are required.', 'error')
+        else:
+            ok, reason = database.check_availability(session['tutor_id'], date, start_time, int(length_mins))
+            if not ok:
+                flash(reason, 'error')
+            else:
+                database.update_session(session_id, date, start_time, int(length_mins))
+                flash('Session updated.', 'success')
+                return redirect(url_for('sessions'))
+
+    return render_template('session_detail.html', session=session)
+
+
 @app.route('/schedule')
 def schedule():
     return render_template('index.html')

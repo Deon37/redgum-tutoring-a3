@@ -150,6 +150,28 @@ def _session_end(start_time, length_mins):
     return dt.strftime('%H:%M')
 
 
+def get_session(session_id):
+    db = get_db()
+    return db.execute(
+        '''SELECT s.id, s.student_id, s.tutor_id, s.date, s.start_time, s.length_mins, s.status,
+                  st.name AS student_name, t.name AS tutor_name
+           FROM sessions s
+           JOIN students st ON st.id = s.student_id
+           JOIN tutors t ON t.id = s.tutor_id
+           WHERE s.id = ?''',
+        (session_id,)
+    ).fetchone()
+
+
+def update_session(session_id, date, start_time, length_mins):
+    db = get_db()
+    db.execute(
+        'UPDATE sessions SET date = ?, start_time = ?, length_mins = ? WHERE id = ?',
+        (date, start_time, length_mins, session_id)
+    )
+    db.commit()
+
+
 def check_availability(tutor_id, date, start_time, length_mins):
     day = _to_day_name(date)
     end_time = _session_end(start_time, length_mins)
