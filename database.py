@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from flask import g
 
 DATABASE = 'redgum.db'
@@ -141,6 +141,35 @@ def delete_availability(availability_id):
     db.commit()
 
 
+def get_blackouts(tutor_id):
+    return get_db().execute(
+        'SELECT * FROM blackouts WHERE tutor_id = ? ORDER BY start_date, end_date, id',
+        (tutor_id,),
+    ).fetchall()
+
+
+def add_blackout(tutor_id, start_date, end_date):
+    for field, value in (('start date', start_date), ('end date', end_date)):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f'Blackout {field} is required.')
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError:
+            raise ValueError(f'Blackout {field} must be a valid date (YYYY-MM-DD).') from None
+        if parsed.isoformat() != value:
+            raise ValueError(f'Blackout {field} must be a valid date (YYYY-MM-DD).')
+    if end_date < start_date:
+        raise ValueError('Blackout end date must be on or after the start date.')
+    if get_tutor(tutor_id) is None:
+        raise ValueError('Tutor not found.')
+    db = get_db()
+    with db:
+        db.execute(
+            'INSERT INTO blackouts (tutor_id, start_date, end_date) VALUES (?, ?, ?)',
+            (tutor_id, start_date, end_date),
+        )
+
+
 def _to_day_name(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d').strftime('%A')
 
@@ -179,9 +208,20 @@ def update_session(session_id, date, start_time, length_mins):
 
 
 def check_availability(tutor_id, date, start_time, length_mins):
-    day = _to_day_name(date)
+    booking_date = datetime.strptime(date, '%Y-%m-%d')
+    day = booking_date.strftime('%A')
     end_time = _session_end(start_time, length_mins)
     db = get_db()
+    blackout = db.execute(
+        'SELECT start_date, end_date FROM blackouts '
+        'WHERE tutor_id = ? AND start_date <= ? AND end_date >= ? '
+        'ORDER BY start_date, id LIMIT 1',
+        (tutor_id, booking_date.date().isoformat(), booking_date.date().isoformat()),
+    ).fetchone()
+    if blackout is not None:
+        tutor = get_tutor(tutor_id)
+        return False, (f'{tutor["name"]} is away during a blackout from '
+                       f'{blackout["start_date"]} to {blackout["end_date"]}.')
     windows = db.execute(
         'SELECT * FROM availability WHERE tutor_id = ? AND day_of_week = ?',
         (tutor_id, day)

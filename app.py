@@ -146,6 +146,27 @@ def availability(tutor_id):
     return render_template('availability.html', tutor=tutor, windows=windows)
 
 
+@app.route('/tutors/<int:tutor_id>/blackouts', methods=['GET', 'POST'])
+def blackouts(tutor_id):
+    tutor = database.get_tutor(tutor_id)
+    if tutor is None:
+        abort(404)
+
+    if request.method == 'POST':
+        start_date = request.form.get('start_date', '').strip()
+        end_date = request.form.get('end_date', '').strip()
+        try:
+            database.add_blackout(tutor_id, start_date, end_date)
+        except ValueError as error:
+            flash(str(error), 'error')
+        else:
+            flash('Blackout period saved.', 'success')
+            return redirect(url_for('blackouts', tutor_id=tutor_id))
+
+    return render_template('blackouts.html', tutor=tutor,
+                           periods=database.get_blackouts(tutor_id))
+
+
 @app.route('/availability/<int:availability_id>/delete', methods=['POST'])
 def delete_availability(availability_id):
     database.delete_availability(availability_id)
