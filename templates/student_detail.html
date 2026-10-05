@@ -33,4 +33,36 @@
     </div>
     <button type="submit" class="btn btn-primary">Save Changes</button>
 </form>
+
+<h2 id="learning-progress">Sessions and Learning Progress</h2>
+{% if sessions %}
+<div class="session-history">
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Start</th>
+                <th scope="col">Tutor</th>
+                <th scope="col">Status</th>
+                <th scope="col">Notes</th>
+                <th scope="col">Session</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for session in sessions %}
+            <tr>
+                <td>{{ session['date'] }}</td>
+                <td>{{ session['start_time'] }}</td>
+                <td>{{ session['tutor_name'] }}</td>
+                <td><span class="badge badge-{{ session['status'] }}">{{ session['status'] }}</span></td>
+                <td class="session-notes">{{ session['notes'] or 'No notes recorded.' }}</td>
+                <td><a href="{{ url_for('session_detail', session_id=session['id']) }}#session-notes">View Session</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p>No sessions recorded for this student.</p>
+{% endif %}
 {% endblock %}

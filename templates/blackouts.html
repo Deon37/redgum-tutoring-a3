@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Blackout Periods{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h1>{{ tutor['name'] }}: Blackout Periods</h1>
+        <p>Record placement or leave dates. Both dates include the entire day.</p>
+    </div>
+    <a href="{{ url_for('availability', tutor_id=tutor['id']) }}" class="btn btn-secondary">Back to Availability</a>
+</div>
+
+{% if periods %}
+<table>
+    <thead><tr><th scope="col">Start Date</th><th scope="col">End Date</th></tr></thead>
+    <tbody>
+        {% for period in periods %}
+        <tr><td>{{ period['start_date'] }}</td><td>{{ period['end_date'] }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No blackout periods recorded.</p>
+{% endif %}
+
+<h2>Add Blackout Period</h2>
+<form class="form" method="POST" action="{{ url_for('blackouts', tutor_id=tutor['id']) }}">
+    <div class="form-group">
+        <label for="start_date">Start Date</label>
+        <input type="date" id="start_date" name="start_date" value="{{ request.form.get('start_date', '') }}" required>
+    </div>
+    <div class="form-group">
+        <label for="end_date">End Date</label>
+        <input type="date" id="end_date" name="end_date" value="{{ request.form.get('end_date', '') }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Blackout</button>
+</form>
+{% endblock %}
