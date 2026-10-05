@@ -317,3 +317,19 @@ textarea:focus {
     font-weight: 600;
     margin-bottom: 12px;
 }
+
+/* Student learning progress */
+.session-history {
+    overflow-x: auto;
+}
+
+.session-history table {
+    min-width: 640px;
+}
+
+.session-notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    min-width: 180px;
+    max-width: 420px;
+}

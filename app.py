@@ -60,7 +60,8 @@ def student_detail(student_id):
                 flash(f'{name} updated.', 'success')
                 return redirect(url_for('students'))
 
-    return render_template('student_detail.html', student=student)
+    return render_template('student_detail.html', student=student,
+                           sessions=database.get_student_sessions(student_id))
 
 
 @app.route('/students/<int:student_id>/deactivate', methods=['POST'])
@@ -262,6 +263,20 @@ def session_detail(session_id):
                 return redirect(url_for('sessions'))
 
     return render_template('session_detail.html', session=session)
+
+
+@app.route('/sessions/<int:session_id>/notes', methods=['POST'])
+def session_notes(session_id):
+    session = database.get_session(session_id)
+    if session is None:
+        abort(404)
+    if 'notes' not in request.form:
+        flash('Session notes are required.', 'error')
+        return render_template('session_detail.html', session=session), 400
+
+    database.update_session_notes(session_id, request.form['notes'])
+    flash('Session notes saved.', 'success')
+    return redirect(url_for('session_detail', session_id=session_id))
 
 
 @app.route('/sessions/<int:session_id>/cancel', methods=['POST'])

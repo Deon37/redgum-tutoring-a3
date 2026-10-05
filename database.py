@@ -195,7 +195,7 @@ def _session_end(start_time, length_mins):
 def get_session(session_id):
     db = get_db()
     return db.execute(
-        '''SELECT s.id, s.student_id, s.tutor_id, s.date, s.start_time, s.length_mins, s.status,
+        '''SELECT s.id, s.student_id, s.tutor_id, s.date, s.start_time, s.length_mins, s.status, s.notes,
                   st.name AS student_name, t.name AS tutor_name
            FROM sessions s
            JOIN students st ON st.id = s.student_id
@@ -203,6 +203,29 @@ def get_session(session_id):
            WHERE s.id = ?''',
         (session_id,)
     ).fetchone()
+
+
+def update_session_notes(session_id, notes):
+    """Save notes without changing the session's booking details or status."""
+    if not isinstance(notes, str):
+        raise ValueError('Session notes must be text.')
+    db = get_db()
+    with db:
+        cursor = db.execute('UPDATE sessions SET notes = ? WHERE id = ?', (notes, session_id))
+        if cursor.rowcount == 0:
+            raise ValueError('Session not found.')
+
+
+def get_student_sessions(student_id):
+    return get_db().execute(
+        '''SELECT s.id, s.date, s.start_time, s.length_mins, s.status, s.notes,
+                  t.name AS tutor_name
+           FROM sessions s
+           JOIN tutors t ON t.id = s.tutor_id
+           WHERE s.student_id = ?
+           ORDER BY s.date DESC, s.start_time DESC, s.id DESC''',
+        (student_id,),
+    ).fetchall()
 
 
 def cancel_session(session_id):
