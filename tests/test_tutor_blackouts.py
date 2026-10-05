@@ -1,5 +1,3 @@
-"""TDD contract: inclusive, whole-day tutor blackouts override weekly availability."""
-
 import os
 import sqlite3
 import tempfile

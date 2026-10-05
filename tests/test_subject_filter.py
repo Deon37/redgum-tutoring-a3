@@ -1,5 +1,3 @@
-"""TDD acceptance tests for filtering booking tutors by subject qualification."""
-
 import os
 import sqlite3
 import tempfile
