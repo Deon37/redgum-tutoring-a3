@@ -1,3 +1,4 @@
+from datetime import date, datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from config import load_settings
 import database
@@ -214,7 +215,36 @@ def cancel_session(session_id):
 
 @app.route('/schedule')
 def schedule():
-    return render_template('index.html')
+    # Default to this calendar week's Tuesday in the centre's Ipswich time zone.
+    today = datetime.now(timezone(timedelta(hours=10))).date()
+    week_start = today - timedelta(days=today.weekday()) + timedelta(days=1)
+    selected_week = request.args.get('week_start')
+    status_code = 200
+    if selected_week is not None:
+        try:
+            selected_date = date.fromisoformat(selected_week)
+            if selected_date.isoformat() != selected_week or selected_date.weekday() != 1:
+                raise ValueError
+            selected_date + timedelta(days=4)
+        except (ValueError, OverflowError):
+            flash('Choose a valid Tuesday date for the start of the week.', 'error')
+            status_code = 400
+        else:
+            week_start = selected_date
+
+    week_end = week_start + timedelta(days=4)
+    sessions = database.get_week_sessions(week_start.isoformat(), week_end.isoformat())
+    days = []
+    for offset, name in enumerate(('Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')):
+        day = (week_start + timedelta(days=offset)).isoformat()
+        days.append({'name': name, 'date': day,
+                     'sessions': [session for session in sessions if session['date'] == day]})
+
+    previous_week = week_start - timedelta(days=7) if week_start.toordinal() > 7 else None
+    next_week = week_start + timedelta(days=7) if (date.max - week_start).days >= 11 else None
+    return render_template('schedule.html', days=days, week_start=week_start,
+                           week_end=week_end, previous_week=previous_week,
+                           next_week=next_week, has_sessions=bool(sessions)), status_code
 
 
 if __name__ == '__main__':
