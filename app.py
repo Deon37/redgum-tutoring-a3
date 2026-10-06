@@ -328,7 +328,6 @@ def schedule():
             selected_date = date.fromisoformat(selected_week)
             if selected_date.isoformat() != selected_week or selected_date.weekday() != 1:
                 raise ValueError
-            selected_date + timedelta(days=4)
         except (ValueError, OverflowError):
             flash('Choose a valid Tuesday date for the start of the week.', 'error')
             status_code = 400

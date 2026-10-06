@@ -43,7 +43,7 @@
             <td>{{ s['date'] }}</td>
             <td>{{ s['start_time'] }}</td>
             <td>{{ s['length_mins'] }} mins</td>
-            <td>{{ s['status'] }}</td>
+            <td><span class="badge badge-{{ s['status'] }}">{{ s['status'].replace('-', ' ') }}</span></td>
             <td><a href="{{ url_for('session_detail', session_id=s['id']) }}" class="btn btn-secondary">Edit</a></td>
         </tr>
         {% endfor %}

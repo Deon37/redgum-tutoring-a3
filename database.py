@@ -286,6 +286,16 @@ def check_availability(tutor_id, date, start_time, length_mins):
         tutor = get_tutor(tutor_id)
         return False, (f'{tutor["name"]} is away during a blackout from '
                        f'{blackout["start_date"]} to {blackout["end_date"]}.')
+    existing = db.execute(
+        '''SELECT start_time, length_mins FROM sessions
+           WHERE tutor_id = ? AND date = ? AND status = 'booked' ''',
+        (tutor_id, booking_date.date().isoformat()),
+    ).fetchall()
+    for s in existing:
+        if s['start_time'] < end_time and _session_end(s['start_time'], s['length_mins']) > start_time:
+            tutor = get_tutor(tutor_id)
+            return False, f'{tutor["name"]} already has a session booked at that time.'
+
     windows = db.execute(
         'SELECT * FROM availability WHERE tutor_id = ? AND day_of_week = ?',
         (tutor_id, day)

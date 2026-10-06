@@ -48,7 +48,7 @@
                 <td>{{ session['tutor_name'] }}</td>
                 <td>{{ session['student_name'] }}</td>
                 <td>{{ session['length_mins'] }} mins</td>
-                <td><span class="badge badge-{{ session['status'] }}">{{ session['status'] }}</span></td>
+                <td><span class="badge badge-{{ session['status'] }}">{{ session['status'].replace('-', ' ') }}</span></td>
             </tr>
             {% else %}
             <tr><td colspan="6">No bookings for this day.</td></tr>
