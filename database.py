@@ -234,6 +234,19 @@ def cancel_session(session_id):
     db.commit()
 
 
+_VALID_STATUSES = ('booked', 'attended', 'no-show', 'cancelled', 'cancelled-late')
+
+
+def update_session_status(session_id, status):
+    if status not in _VALID_STATUSES:
+        raise ValueError(f'Invalid status: {status}')
+    db = get_db()
+    with db:
+        cursor = db.execute('UPDATE sessions SET status = ? WHERE id = ?', (status, session_id))
+        if cursor.rowcount == 0:
+            raise ValueError('Session not found.')
+
+
 def update_session(session_id, date, start_time, length_mins):
     db = get_db()
     db.execute(
