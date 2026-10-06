@@ -177,6 +177,7 @@ def delete_availability(availability_id):
 
 @app.route('/sessions', methods=['GET', 'POST'])
 def sessions():
+    day_filter = request.args.get('day', '').strip() if request.method == 'GET' else ''
     submitted = request.form if request.method == 'POST' else request.args
     values = {field: submitted.get(field, '').strip() for field in (
         'student_id', 'tutor_id', 'subject', 'date', 'start_time', 'length_mins',
@@ -236,7 +237,8 @@ def sessions():
                                   start_time if not slot_error else None, length_mins),
         subjects=sorted(subjects.values(), key=str.casefold),
         form_values=values,
-        sessions=database.get_sessions(),
+        sessions=database.get_sessions_by_date(day_filter) if day_filter else database.get_sessions(),
+        day_filter=day_filter,
     )
 
 

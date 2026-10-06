@@ -311,6 +311,19 @@ def get_sessions():
     ).fetchall()
 
 
+def get_sessions_by_date(date):
+    return get_db().execute(
+        '''SELECT s.id, st.name AS student_name, t.name AS tutor_name,
+                  s.date, s.start_time, s.length_mins, s.status
+           FROM sessions s
+           JOIN students st ON st.id = s.student_id
+           JOIN tutors t ON t.id = s.tutor_id
+           WHERE s.date = ?
+           ORDER BY s.start_time, s.id''',
+        (date,),
+    ).fetchall()
+
+
 def get_week_sessions(start_date, end_date):
     """Return all tutors' sessions within the inclusive schedule date range."""
     return get_db().execute(

@@ -11,6 +11,17 @@
     <a href="#book-session" class="btn btn-primary">Book Session</a>
 </div>
 
+<form method="GET" action="{{ url_for('sessions') }}" style="display:flex;align-items:flex-end;gap:8px;margin-bottom:16px;">
+    <div class="form-group" style="margin-bottom:0;">
+        <label for="day">Filter by date</label>
+        <input type="date" id="day" name="day" value="{{ day_filter }}">
+    </div>
+    <button type="submit" class="btn btn-secondary">View Day</button>
+    {% if day_filter %}<a href="{{ url_for('sessions') }}" class="btn btn-secondary">Show All</a>{% endif %}
+</form>
+
+{% if day_filter %}<h2>Sessions for {{ day_filter }}</h2>{% endif %}
+
 {% if sessions %}
 <table>
     <thead>
@@ -39,7 +50,7 @@
     </tbody>
 </table>
 {% else %}
-<p>No sessions booked yet.</p>
+<p>{% if day_filter %}No sessions on {{ day_filter }}.{% else %}No sessions booked yet.{% endif %}</p>
 {% endif %}
 
 <h2 id="book-session" class="mt-24">Book a Session</h2>
