@@ -279,6 +279,21 @@ def session_notes(session_id):
     return redirect(url_for('session_detail', session_id=session_id))
 
 
+@app.route('/sessions/<int:session_id>/status', methods=['POST'])
+def session_status(session_id):
+    session = database.get_session(session_id)
+    if session is None:
+        abort(404)
+    status = request.form.get('status', '').strip()
+    try:
+        database.update_session_status(session_id, status)
+    except ValueError as error:
+        flash(str(error), 'error')
+    else:
+        flash('Session status updated.', 'success')
+    return redirect(url_for('session_detail', session_id=session_id))
+
+
 @app.route('/sessions/<int:session_id>/cancel', methods=['POST'])
 def cancel_session(session_id):
     session = database.get_session(session_id)

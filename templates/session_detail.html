@@ -33,6 +33,20 @@
     <button type="submit" class="btn btn-primary">Save Changes</button>
 </form>
 
+<h2>Session Status</h2>
+<p>Current status: <span class="badge badge-{{ session['status'] }}">{{ session['status'].replace('-', ' ') }}</span></p>
+<form class="form" method="POST" action="{{ url_for('session_status', session_id=session['id']) }}">
+    <div class="form-group">
+        <label for="status">Mark session as</label>
+        <select id="status" name="status">
+            <option value="attended" {% if session['status'] == 'attended' %}selected{% endif %}>Attended</option>
+            <option value="no-show" {% if session['status'] == 'no-show' %}selected{% endif %}>No Show</option>
+            <option value="cancelled-late" {% if session['status'] == 'cancelled-late' %}selected{% endif %}>Cancelled Late</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Status</button>
+</form>
+
 <h2 id="session-notes">Session Notes</h2>
 <p>Record the topics covered, learning progress and next steps for subsequent tutors.</p>
 <form class="form" method="POST" action="{{ url_for('session_notes', session_id=session['id']) }}">
