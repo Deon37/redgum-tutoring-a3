@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Upcoming Sessions{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h1>Upcoming Sessions</h1>
+        <p>{{ tutor['name'] }}</p>
+    </div>
+    <a href="{{ url_for('tutor_detail', tutor_id=tutor['id']) }}" class="btn btn-secondary">Back</a>
+</div>
+
+{% if sessions %}
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Start</th>
+            <th>Length</th>
+            <th>Student</th>
+            <th>Year</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in sessions %}
+        <tr>
+            <td>{{ s['date'] }}</td>
+            <td>{{ s['start_time'] }}</td>
+            <td>{{ s['length_mins'] }} mins</td>
+            <td>{{ s['student_name'] }}</td>
+            <td>Year {{ s['year_level'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No upcoming sessions.</p>
+{% endif %}
+{% endblock %}

@@ -311,6 +311,20 @@ def get_sessions():
     ).fetchall()
 
 
+def get_tutor_upcoming_sessions(tutor_id):
+    return get_db().execute(
+        '''SELECT s.id, s.date, s.start_time, s.length_mins, s.status,
+                  st.name AS student_name, st.year_level
+           FROM sessions s
+           JOIN students st ON st.id = s.student_id
+           WHERE s.tutor_id = ?
+           AND s.date >= date('now')
+           AND s.status = 'booked'
+           ORDER BY s.date, s.start_time, s.id''',
+        (tutor_id,),
+    ).fetchall()
+
+
 def get_sessions_by_date(date):
     return get_db().execute(
         '''SELECT s.id, st.name AS student_name, t.name AS tutor_name,
