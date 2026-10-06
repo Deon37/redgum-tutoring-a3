@@ -61,7 +61,8 @@ def student_detail(student_id):
                 return redirect(url_for('students'))
 
     return render_template('student_detail.html', student=student,
-                           sessions=database.get_student_sessions(student_id))
+                           upcoming=database.get_student_upcoming_sessions(student_id),
+                           past=database.get_student_past_sessions(student_id))
 
 
 @app.route('/students/<int:student_id>/deactivate', methods=['POST'])

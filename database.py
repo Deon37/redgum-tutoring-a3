@@ -216,13 +216,28 @@ def update_session_notes(session_id, notes):
             raise ValueError('Session not found.')
 
 
-def get_student_sessions(student_id):
+def get_student_upcoming_sessions(student_id):
     return get_db().execute(
         '''SELECT s.id, s.date, s.start_time, s.length_mins, s.status, s.notes,
                   t.name AS tutor_name
            FROM sessions s
            JOIN tutors t ON t.id = s.tutor_id
            WHERE s.student_id = ?
+           AND s.date >= date('now')
+           AND s.status = 'booked'
+           ORDER BY s.date, s.start_time, s.id''',
+        (student_id,),
+    ).fetchall()
+
+
+def get_student_past_sessions(student_id):
+    return get_db().execute(
+        '''SELECT s.id, s.date, s.start_time, s.length_mins, s.status, s.notes,
+                  t.name AS tutor_name
+           FROM sessions s
+           JOIN tutors t ON t.id = s.tutor_id
+           WHERE s.student_id = ?
+           AND NOT (s.date >= date('now') AND s.status = 'booked')
            ORDER BY s.date DESC, s.start_time DESC, s.id DESC''',
         (student_id,),
     ).fetchall()
